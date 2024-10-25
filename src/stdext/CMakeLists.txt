@@ -20,6 +20,7 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/coroutine.hpp
     include/injectx/stdext/expected.hpp
     include/injectx/stdext/expects.hpp
+    include/injectx/stdext/function_traits.hpp
     include/injectx/stdext/monadics.hpp
     include/injectx/stdext/source_location.hpp
 
