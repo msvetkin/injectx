@@ -25,6 +25,7 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/generator.hpp
     include/injectx/stdext/monadics.hpp
     include/injectx/stdext/source_location.hpp
+    include/injectx/stdext/static_format.hpp
     include/injectx/stdext/static_string.hpp
 
     src/coro/promise.cpp
