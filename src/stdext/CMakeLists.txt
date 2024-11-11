@@ -7,6 +7,7 @@ find_package(fmt CONFIG REQUIRED)
 
 target_sources(${injectx_module_target}
   PRIVATE
+    include/injectx/stdext/concepts/is_any_of.hpp
     include/injectx/stdext/coroutine.hpp
 )
 
