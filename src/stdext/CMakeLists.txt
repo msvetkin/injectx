@@ -9,6 +9,8 @@ target_sources(${injectx_module_target}
   PRIVATE
     include/injectx/stdext/concepts/is_any_of.hpp
     include/injectx/stdext/coro/concepts.hpp
+    include/injectx/stdext/coro/promise.hpp
+    include/injectx/stdext/coro/task.hpp
     include/injectx/stdext/details/source_location.hpp
     include/injectx/stdext/monadics/and_then.hpp
     include/injectx/stdext/monadics/or_else.hpp
@@ -21,8 +23,16 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/monadics.hpp
     include/injectx/stdext/source_location.hpp
 
+    src/coro/promise.cpp
     src/expects.cpp
 )
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+  target_compile_definitions(${injectx_module_target}
+    PUBLIC
+      $<$<CONFIG:Debug>:INJECTX_STDEXT_CORO_NO_SYMMETRIC_TRANSFER>
+  )
+endif()
 
 target_link_libraries(${injectx_module_target}
   PUBLIC
