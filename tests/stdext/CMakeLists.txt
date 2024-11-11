@@ -7,4 +7,5 @@ add_subdirectory(details)
 add_subdirectory(expects)
 
 add_injectx_test(coroutine)
+add_injectx_test(expected)
 add_injectx_test(source_location)
