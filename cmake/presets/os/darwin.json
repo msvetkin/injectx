@@ -1,0 +1,44 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "darwin",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "x64-darwin",
+      "hidden": true,
+      "inherits": "darwin",
+      "cacheVariables": {
+        "CMAKE_APPLE_SILICON_PROCESSOR": "x86_64"
+      }
+    },
+    {
+      "name": "arm64-darwin",
+      "hidden": true,
+      "inherits": "darwin",
+      "cacheVariables": {
+        "CMAKE_APPLE_SILICON_PROCESSOR": "arm64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "darwin",
+      "hidden": true,
+      "configurePreset": "darwin"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "darwin",
+      "hidden": true,
+      "configurePreset": "darwin"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+# Copyright (c) 2023 Mikhail Svetkin
+# SPDX-License-Identifier: MIT
+---
+Language:        Cpp
+BasedOnStyle:  Google
+
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveBitFields: Consecutive
+
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+# AllowShortLambdasOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+DerivePointerAlignment: true
+# AlignOperands: DontAlign
+# AlignOperands: Align
+AlignOperands: AlignAfterOperator
+BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakInheritanceList: AfterComma
+
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '^"injectx/.*'
+    Priority:        1
+  - Regex:           '^<fmt.*\.h>'
+    Priority:        2
+  - Regex:           '^<gsl.*>'
+    Priority:        2
+  - Regex:           '^<boost.*\.hpp>'
+    Priority:        2
+  - Regex:           '^<catch2.*\.hpp>'
+    Priority:        4
+  - Regex:           '^<.*>'
+    Priority:        5
+  - Regex:           '^<.*\.h>'
+    Priority:        6
+
+IndentPPDirectives: AfterHash
+InsertBraces: true
+
+# LambdaBodyIndentation: OuterScope
+
+PackConstructorInitializers: Never
+# PointerAlignment: Right
+QualifierAlignment: Left
+RemoveParentheses: ReturnStatement
+
+ShortNamespaceLines: 0
+
+SeparateDefinitionBlocks: Always
+SpaceAfterTemplateKeyword: false
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: true
+  AfterFunctionDefinitionName: false
+  AfterFunctionDeclarationName: false
+  AfterIfMacros:   true
+  AfterOverloadedOperator: false
+  AfterPlacementOperator: true
+  AfterRequiresInClause: true
+  AfterRequiresInExpression: false
+  BeforeNonEmptyParentheses: false
