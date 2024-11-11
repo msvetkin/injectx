@@ -9,7 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(add_injectx_test)
 
-add_subdirectory(core)
+add_subdirectory(stdext)
 
 add_test(
   NAME cmake-install
