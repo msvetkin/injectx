@@ -2,3 +2,4 @@
 # SPDX-License-Identifier: MIT
 
 add_injectx_test(concepts)
+add_injectx_test(task)
