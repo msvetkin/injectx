@@ -12,71 +12,56 @@
 #include <type_traits>
 #include <utility>
 
-#define ExpectedTestedValueTypes void, int, Some
-#define TYPED_TEST_CASE(name) \
-  TEMPLATE_TEST_CASE(name, "", ExpectedTestedValueTypes)
+namespace injectx::stdext::tests {
 
 namespace {
 
 struct Some {
-  // clang does not see usage of it in checkValue
+  // clang does not see usage of it in constexpr context
   [[maybe_unused]] friend constexpr std::strong_ordering operator<=>(
       const Some &, const Some &) = default;
 };
 
-using Types = std::tuple<ExpectedTestedValueTypes>;
-constexpr auto Values = std::make_tuple(std::in_place, 10, Some{});
-static_assert(
-    std::tuple_size_v<Types> == std::tuple_size_v<decltype(Values)>,
-    "Types and Values should match");
-
-template<typename T>
-[[nodiscard]] constexpr auto getValue() noexcept {
-  if constexpr (std::is_void_v<T>) {
-    return std::get<std::in_place_t>(Values);
-  } else {
-    return std::get<T>(Values);
-  }
-}
-
-template<typename T, injectx::stdext::is_expected Expected>
-constexpr bool checkValue(const Expected &expected) noexcept {
-  if constexpr (std::is_void_v<T>) {
-    return expected.has_value() && std::is_void_v<decltype(expected.value())>;
-  } else {
-    return expected.value() == getValue<T>();
-  }
-}
-
 }  // namespace
 
-namespace injectx::stdext::tests {
-
-TYPED_TEST_CASE("type-traits") {
-  using Expected = expected<TestType, std::string_view>;
-  STATIC_REQUIRE(std::same_as<typename Expected::value_type, TestType>);
-  STATIC_REQUIRE(std::same_as<typename Expected::error_type, std::string_view>);
+TEMPLATE_TEST_CASE_SIG(
+    "type-traits",
+    "",
+    ((typename T, typename E, bool DI), T, E, DI),
+    (void, int, true),
+    (int, bool, false),
+    (Some, std::string_view, false)) {
+  using Expected = expected<T, E>;
+  STATIC_REQUIRE(std::same_as<typename Expected::value_type, T>);
+  STATIC_REQUIRE(std::same_as<typename Expected::error_type, E>);
   STATIC_REQUIRE(
-      std::same_as<
-          typename Expected::unexpected_type, unexpected<std::string_view>>);
-  STATIC_REQUIRE(
-      std::default_initializable<Expected>
-      == std::is_void_v<typename Expected::value_type>);
+      std::same_as<typename Expected::unexpected_type, unexpected<E>>);
+  STATIC_REQUIRE(std::default_initializable<Expected> == DI);
   STATIC_REQUIRE(std::copy_constructible<Expected>);
   STATIC_REQUIRE(std::move_constructible<Expected>);
   STATIC_REQUIRE(
       std::constructible_from<Expected, typename Expected::unexpected_type>);
 }
 
-TYPED_TEST_CASE("ctor-implicit") {
-  using Expected = expected<TestType, std::string_view>;
-
+TEMPLATE_TEST_CASE_SIG(
+    "ctor-implicit-value",
+    "",
+    ((typename T, auto V), T, V),
+    (void, std::in_place),
+    (int, 10),
+    (Some, Some{})) {
+  using Expected = expected<T, std::string_view>;
   constexpr auto result = std::invoke([]() -> Expected {
-    return getValue<TestType>();
+    return V;
   });
 
   STATIC_REQUIRE(result.has_value());
-  STATIC_REQUIRE(checkValue<TestType>(result));
+
+  if constexpr (std::is_void_v<T>) {
+    result.value();
+  } else {
+    STATIC_REQUIRE(result.value() == V);
+  }
 }
 
 TEST_CASE("value-void-ctor-default") {
@@ -87,56 +72,86 @@ TEST_CASE("value-void-ctor-default") {
   STATIC_REQUIRE(std::same_as<decltype(result.value()), void>);
 }
 
-TYPED_TEST_CASE("ctor-implicit-unexpected") {
+TEMPLATE_TEST_CASE("ctor-implicit-unexpected", "", void, int, Some) {
   using Expected = expected<TestType, std::string_view>;
-
-  constexpr auto result = []() -> Expected {
+  constexpr auto result = std::invoke([]() -> Expected {
     return unexpected{"boo"};
-  }();
+  });
+
   STATIC_REQUIRE(result.has_value() == false);
   STATIC_REQUIRE(result.error() == std::string_view{"boo"});
 }
 
-TYPED_TEST_CASE("ctor-copy-value") {
-  using Expected = expected<TestType, std::string_view>;
+TEMPLATE_TEST_CASE_SIG(
+    "ctor-copy-value",
+    "",
+    ((typename T, auto V), T, V),
+    (void, std::in_place),
+    (int, 10),
+    (Some, Some{})) {
+  using Expected = expected<T, std::string_view>;
 
-  constexpr Expected result{getValue<TestType>()};
+  constexpr Expected result{V};
   constexpr Expected result2{result};
   STATIC_REQUIRE(result2.has_value() == true);
-  STATIC_REQUIRE(checkValue<TestType>(result2));
+
+  if constexpr (std::is_void_v<T>) {
+    result.value();
+  } else {
+    STATIC_REQUIRE(result.value() == V);
+  }
 }
 
-TYPED_TEST_CASE("ctor-copy-error") {
+TEMPLATE_TEST_CASE("ctor-copy-error", "", void, int, Some) {
   using Expected = expected<TestType, std::string_view>;
 
   constexpr Expected result{unexpected{"fail"}};
   constexpr Expected result2{result};
+
   STATIC_REQUIRE(result2.has_value() == false);
   STATIC_REQUIRE(result2.error() == std::string_view{"fail"});
 }
 
-TYPED_TEST_CASE("ctor-move-value") {
-  using Expected = expected<TestType, std::string_view>;
+TEMPLATE_TEST_CASE_SIG(
+    "ctor-move-value",
+    "",
+    ((typename T, auto V), T, V),
+    (void, std::in_place),
+    (int, 10),
+    (Some, Some{})) {
+  using Expected = expected<T, std::string_view>;
 
-  constexpr auto result = []() {
-    Expected result{getValue<TestType>()};
+  constexpr auto result = std::invoke([] {
+    Expected result{V};
     Expected result2{std::move(result)};
     return result2;
-  }();
+  });
   STATIC_REQUIRE(result.has_value() == true);
-  STATIC_REQUIRE(checkValue<TestType>(result));
+
+  if constexpr (std::is_void_v<T>) {
+    result.value();
+  } else {
+    STATIC_REQUIRE(result.value() == V);
+  }
 }
 
-TYPED_TEST_CASE("ctor-move-error") {
-  using Expected = expected<TestType, std::string_view>;
+TEMPLATE_TEST_CASE_SIG(
+    "ctor-move-error",
+    "",
+    ((typename T, auto V), T, V),
+    (void, std::in_place),
+    (int, 10),
+    (Some, Some{})) {
+  using Expected = expected<T, std::string_view>;
 
-  constexpr auto res = []() {
+  constexpr auto result = std::invoke([] {
     Expected res{unexpected{"fail"}};
     Expected res2{std::move(res)};
     return res2;
-  }();
-  STATIC_REQUIRE(res.has_value() == false);
-  STATIC_REQUIRE(res.error() == std::string_view{"fail"});
+  });
+
+  STATIC_REQUIRE(result.has_value() == false);
+  STATIC_REQUIRE(result.error() == std::string_view{"fail"});
 }
 
 template<typename T>
@@ -159,12 +174,18 @@ struct QualifiersFor<void> {
   using const_rvalue_reference = void;
 };
 
-TYPED_TEST_CASE("accessors-qualifiers") {
-  using Expected = expected<TestType, std::string_view>;
-  using Value = QualifiersFor<TestType>;
+TEMPLATE_TEST_CASE_SIG(
+    "accessors-qualifiers",
+    "",
+    ((typename T, auto V), T, V),
+    (void, std::in_place),
+    (int, 10),
+    (Some, Some{})) {
+  using Expected = expected<T, std::string_view>;
+  using Value = QualifiersFor<T>;
   using Error = QualifiersFor<std::string_view>;
 
-  Expected result{getValue<TestType>()};
+  Expected result{V};
 
   STATIC_REQUIRE(
       std::same_as<decltype(*result), typename Value::lvalue_reference>);
