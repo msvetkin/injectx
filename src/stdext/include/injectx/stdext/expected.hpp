@@ -240,9 +240,52 @@ inline constexpr bool is_expected = false;
 template<typename T, typename E>
 inline constexpr bool is_expected<expected<T, E>> = true;
 
+template<typename F, typename V>
+struct invoke_result_helper {
+  using type = std::invoke_result_t<F, V>;
+};
+
+template<typename F>
+struct invoke_result_helper<F, void> {
+  using type = std::invoke_result_t<F>;
+};
+
+template<typename F, typename V>
+  requires(std::is_void_v<V> && std::invocable<F>)
+           || (!std::is_void_v<V> && std::invocable<F, V>)
+using invoke_result = typename invoke_result_helper<F, V>::type;
+
+template<typename T, typename F>
+concept and_thenable = requires(T t) {
+  requires is_expected<std::remove_cvref_t<
+      invoke_result<F, decltype(std::forward<T>(t).value())>>>;
+  requires std::same_as<
+      typename std::remove_cvref_t<T>::error_type,
+      typename invoke_result<
+          F, decltype(std::forward<T>(t).value())>::error_type>;
+};
+
+template<typename T, typename F>
+  requires and_thenable<T, F>
+using and_then_return = invoke_result<F, decltype(std::declval<T>().value())>;
+
 }  // namespace details::_expected
 
 template<typename T>
 concept is_expected = details::_expected::is_expected<std::remove_cvref_t<T>>;
+
+template<is_expected T, typename F>
+constexpr auto and_then_as(T&& t, F&& f) noexcept
+    -> details::_expected::and_then_return<decltype(std::forward<T>(t)), F> {
+  if (!t.has_value()) {
+    return unexpected{std::forward<T>(t).error()};
+  }
+
+  if constexpr (std::is_void_v<decltype(std::forward<T>(t).value())>) {
+    return std::invoke(std::forward<F>(f));
+  } else {
+    return std::invoke(std::forward<F>(f), std::forward<T>(t).value());
+  }
+}
 
 }  // namespace injectx::stdext
