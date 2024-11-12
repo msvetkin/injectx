@@ -42,6 +42,20 @@ struct Monadics {
   });
 };
 
+template<typename R>
+struct Monadics<void, R> {
+  using Value = decltype([]() -> R {
+    return 1;
+  });
+  using LValueRef = Value;
+  using ConstLValueRef = Value;
+  using RValueRef = Value;
+  using ConstRValueRef = Value;
+  using LikeExpected = decltype([]() {
+    return LookLikeExpected{};
+  });
+};
+
 class Some {
  public:
   Some &operator++() {
@@ -152,6 +166,91 @@ TEMPLATE_TEST_CASE("and-then-value", "", int, Some) {
     REQUIRE(std::any_cast<TestType>(r2.value()) == 11);
     REQUIRE(r3.has_value());
     STATIC_REQUIRE(std::is_void_v<typename decltype(r3)::value_type>);
+  }
+}
+
+TEMPLATE_TEST_CASE_SIG(
+    "transformable-value",
+    "",
+    ((typename T, bool E), T, E),
+    (int, false),
+    (Some, false),
+    (void, true)) {
+  using Expected = expected<T, std::string_view>;
+  using M = Monadics<T, std::conditional_t<std::is_void_v<T>, int, T>>;
+  using Value = typename M::Value;
+  using LValueRef = typename M::LValueRef;
+  using RValueRef = typename M::RValueRef;
+  using ConstLValueRef = typename M::ConstLValueRef;
+  using ConstRValueRef = typename M::ConstRValueRef;
+
+  STATIC_REQUIRE(transformable<Expected &, Value>);
+  STATIC_REQUIRE(transformable<Expected &, LValueRef>);
+  STATIC_REQUIRE(transformable<Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(transformable<Expected &, RValueRef> == E);
+  STATIC_REQUIRE(transformable<Expected &, ConstRValueRef> == E);
+
+  STATIC_REQUIRE(transformable<const Expected &, Value>);
+  STATIC_REQUIRE(transformable<const Expected &, LValueRef> == E);
+  STATIC_REQUIRE(transformable<const Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(transformable<const Expected &, RValueRef> == E);
+  STATIC_REQUIRE(transformable<const Expected &, ConstRValueRef> == E);
+
+  STATIC_REQUIRE(transformable<Expected &&, Value>);
+  STATIC_REQUIRE(transformable<Expected &&, LValueRef> == E);
+  STATIC_REQUIRE(transformable<Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(transformable<Expected &&, RValueRef>);
+  STATIC_REQUIRE(transformable<Expected &&, ConstRValueRef>);
+
+  STATIC_REQUIRE(transformable<const Expected &&, Value>);
+  STATIC_REQUIRE(transformable<const Expected &&, LValueRef> == E);
+  STATIC_REQUIRE(transformable<const Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(transformable<const Expected &&, RValueRef> == E);
+  STATIC_REQUIRE(transformable<const Expected &&, ConstRValueRef>);
+}
+
+TEST_CASE("transform-value") {
+  using Expected = expected<int, std::string_view>;
+
+  auto getResult = [](bool initWithError) {
+    auto r1 = initWithError ? Expected{unexpected{"foo"}} : Expected{10};
+
+    auto r2 = r1 | transform([](auto &v) {
+                v = 5;
+                return 20;
+              });
+    auto r3 = std::as_const(r1) | transform([](const auto &v) {
+                return v + 10;
+              })
+            | transform([](auto &&v) {
+                return v + 1;
+              });
+    auto r4 = r3 | transform([](auto &) {
+                return;
+              });
+
+    return std::tuple{
+        std::move(r1), std::move(r2), std::move(r3), std::move(r4)};
+  };
+
+  SECTION("init with value") {
+    constexpr auto r = getResult(false);
+    STATIC_REQUIRE(std::get<0>(r).value() == 5);
+    STATIC_REQUIRE(std::get<1>(r).value() == 20);
+    STATIC_REQUIRE(std::get<2>(r).value() == 16);
+    STATIC_REQUIRE(std::get<3>(r).has_value());
+    STATIC_REQUIRE(std::is_void_v<
+                   typename std::tuple_element_t<3, decltype(r)>::value_type>);
+  }
+
+  SECTION("init with error") {
+    constexpr auto r1 = getResult(true);
+    STATIC_REQUIRE(std::get<0>(r1).has_value() == false);
+    STATIC_REQUIRE(std::get<1>(r1).has_value() == false);
+    STATIC_REQUIRE(std::get<2>(r1).has_value() == false);
+    STATIC_REQUIRE(std::get<3>(r1).has_value() == false);
+    STATIC_REQUIRE(std::is_void_v<
+                   typename std::tuple_element_t<3, decltype(r1)>::value_type>);
   }
 }
 

@@ -269,6 +269,12 @@ template<typename T, typename F>
   requires and_thenable<T, F>
 using and_then_return = invoke_result<F, decltype(std::declval<T>().value())>;
 
+template<typename T, typename F>
+concept transformable = requires(T t) {
+  requires !is_expected<std::remove_cvref_t<
+      invoke_result<F, decltype(std::forward<T>(t).value())>>>;
+};
+
 }  // namespace details::_expected
 
 template<typename T>
@@ -285,6 +291,41 @@ constexpr auto and_then_as(T&& t, F&& f) noexcept
     return std::invoke(std::forward<F>(f));
   } else {
     return std::invoke(std::forward<F>(f), std::forward<T>(t).value());
+  }
+}
+
+template<is_expected T, typename F>
+constexpr auto transform_as(T&& t, F&& f) noexcept
+  requires details::_expected::transformable<T, F>
+{
+  using ReturnValue = details::_expected::invoke_result<
+      F, decltype(std::forward<T>(t).value())>;
+  using Expected = std::remove_cvref_t<T>;
+  using Return = typename Expected::template rebind<ReturnValue>;
+
+  if (!t.has_value()) {
+    return Return{unexpected{std::forward<T>(t).error()}};
+  }
+
+  constexpr auto is_return_value_void = std::is_void_v<ReturnValue>;
+  constexpr auto is_expected_value_void =
+      std::is_void_v<typename Expected::value_type>;
+
+  if constexpr (is_return_value_void) {
+    if constexpr (is_expected_value_void) {
+      std::invoke(std::forward<F>(f));
+    } else {
+      std::invoke(std::forward<F>(f), std::forward<T>(t).value());
+    }
+
+    return Return{};
+  } else {
+    if constexpr (is_expected_value_void) {
+      return Return{std::invoke(std::forward<F>(f))};
+    } else {
+      return Return{
+          std::invoke(std::forward<F>(f), std::forward<T>(t).value())};
+    }
   }
 }
 
