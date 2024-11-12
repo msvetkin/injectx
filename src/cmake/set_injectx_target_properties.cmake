@@ -24,7 +24,7 @@ function(set_injectx_target_properties target type)
 
   if (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     target_compile_options(${target} ${type}
-      $<$<CXX_COMPILER_ID:MSVC>:/W4>
+      $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4251>
       $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
     )
   endif()
