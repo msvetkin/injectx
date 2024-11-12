@@ -9,7 +9,7 @@
 
 #include <any>
 
-namespace injectx::stdext::tests {
+namespace {
 
 struct LookLikeExpected {
   using error_type = std::string_view;
@@ -55,6 +55,10 @@ struct Monadics<void, R> {
     return LookLikeExpected{};
   });
 };
+
+}  // namespace
+
+namespace injectx::stdext::tests {
 
 class Some {
  public:
@@ -168,6 +172,13 @@ TEMPLATE_TEST_CASE("and-then-value", "", int, Some) {
     STATIC_REQUIRE(std::is_void_v<typename decltype(r3)::value_type>);
   }
 }
+
+template<typename T, size_t S>
+struct Bar {
+  size_t size() {
+    return S;
+  }
+};
 
 TEMPLATE_TEST_CASE_SIG(
     "transformable-value",
