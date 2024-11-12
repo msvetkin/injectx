@@ -27,10 +27,18 @@ add_test(
       --target ${injectx_test_target}
       --config $<CONFIGURATION>
 )
-set_tests_properties(${injectx_test_target}-output
-  PROPERTIES
-    PASS_REGULAR_EXPRESSION "condition failted: 'expected to be true'"
-)
+
+if (MSVC)
+  set_tests_properties(${injectx_test_target}-output
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "failure was caused by evaluating a throw sub-expression"
+  )
+else()
+  set_tests_properties(${injectx_test_target}-output
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "condition failted: 'expected to be true'"
+  )
+endif()
 
 add_injectx_test_executable(fail_runtime)
 add_test(
