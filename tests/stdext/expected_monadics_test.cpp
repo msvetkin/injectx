@@ -19,7 +19,7 @@ struct Monadics {
   using Type = T;
   using Return = R;
 
-  using Value = decltype([](auto v) -> R {
+  using Value = decltype([](T v) -> R {
     return v;
   });
 
