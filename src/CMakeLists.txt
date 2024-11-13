@@ -12,4 +12,4 @@ include(add_injectx_module)
 include(add_injectx_executable)
 
 add_subdirectory(core)
-add_subdirectory(cli)
+add_subdirectory(stdext)
