@@ -10,6 +10,7 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/concepts/is_any_of.hpp
     include/injectx/stdext/coro/concepts.hpp
     include/injectx/stdext/details/source_location.hpp
+    include/injectx/stdext/monadics/pipe.hpp
     include/injectx/stdext/coroutine.hpp
     include/injectx/stdext/expected.hpp
     include/injectx/stdext/expects.hpp
