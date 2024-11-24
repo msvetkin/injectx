@@ -4,6 +4,7 @@
 #pragma once
 
 #include "injectx/stdext/expects.hpp"
+#include "injectx/stdext/monadics.hpp"
 
 #include <concepts>
 #include <functional>
@@ -30,6 +31,8 @@ concept valid_value_and_error_types = requires {
 template<details::_expected::valid_error_type Error>
 class [[nodiscard]] unexpected {
  public:
+  using error_type = Error;
+
   template<typename E = Error>
     requires std::constructible_from<Error, E>
   constexpr explicit unexpected(E&& error)
@@ -235,14 +238,65 @@ class [[nodiscard]] expected<void, Error> {
 namespace details::_expected {
 
 template<typename T>
-inline constexpr bool is_expected = false;
+inline constexpr bool is = false;
 
 template<typename T, typename E>
-inline constexpr bool is_expected<expected<T, E>> = true;
+inline constexpr bool is<expected<T, E>> = true;
 
 }  // namespace details::_expected
 
 template<typename T>
-concept is_expected = details::_expected::is_expected<std::remove_cvref_t<T>>;
+concept is_expected = details::_expected::is<std::remove_cvref_t<T>>;
+
+namespace details::_expected {
+
+template<typename F, typename V>
+struct invoke_result {
+  using type = std::invoke_result_t<F, V>;
+};
+
+template<typename F>
+struct invoke_result<F, void> {
+  using type = std::invoke_result_t<F>;
+};
+
+template<typename F, typename V>
+  requires(std::is_void_v<V> && std::invocable<F>)
+           || (!std::is_void_v<V> && std::invocable<F, V>)
+using invoke_result_t = typename invoke_result<F, V>::type;
+
+template<typename T>
+concept is_void = requires {
+  requires is_expected<T>;
+  requires std::is_void_v<typename std::remove_cvref_t<T>::value_type>;
+};
+
+template<
+    typename T,
+    typename F,
+    typename R = invoke_result_t<F, decltype(std::declval<T>().value())>>
+  requires requires {
+    requires is_expected<R>;
+    requires std::same_as<
+        typename std::remove_cvref_t<T>::error_type,
+        typename std::remove_cvref_t<R>::error_type>;
+  }
+using and_then_return = R;
+
+}  // namespace details::_expected
+
+template<is_expected T, typename F>
+constexpr auto and_then_as(T&& t, F&& f) noexcept
+    -> details::_expected::and_then_return<decltype(t), decltype(f)> {
+  if (!t.has_value()) {
+    return unexpected{std::forward<T>(t).error()};
+  }
+
+  if constexpr (details::_expected::is_void<T>) {
+    return std::invoke(std::forward<F>(f));
+  } else {
+    return std::invoke(std::forward<F>(f), std::forward<T>(t).value());
+  }
+}
 
 }  // namespace injectx::stdext
