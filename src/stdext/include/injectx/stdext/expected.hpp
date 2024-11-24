@@ -333,4 +333,34 @@ constexpr auto transform_as(T&& t, F&& f) noexcept
   }
 }
 
+namespace details::_expected {
+
+template<
+    typename T,
+    typename F,
+    typename R = invoke_result_t<F, decltype(std::declval<T>().error())>>
+  requires requires {
+    requires is_expected<R>;
+    requires std::same_as<
+        typename std::remove_cvref_t<T>::value_type,
+        typename std::remove_cvref_t<R>::value_type>;
+  }
+using or_else_return = R;
+
+}  // namespace details::_expected
+
+template<is_expected T, typename F>
+constexpr auto or_else_as(T&& t, F&& f) noexcept
+    -> details::_expected::or_else_return<decltype(t), decltype(f)> {
+  if (!t.has_value()) {
+    return std::invoke(std::forward<F>(f), std::forward<T>(t).error());
+  }
+
+  if constexpr (details::_expected::is_void<T>) {
+    return {};
+  } else {
+    return std::forward<T>(t).value();
+  }
+}
+
 }  // namespace injectx::stdext

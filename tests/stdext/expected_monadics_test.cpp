@@ -310,4 +310,89 @@ TEST_CASE("transform") {
   }
 }
 
+TEMPLATE_TEST_CASE("or-else-concept", "", int, Some) {
+  using Expected = expected<std::string_view, TestType>;
+  using Op = Operations<
+      unexpected<TestType>, typename Expected::template rebind_error<std::any>>;
+  using Value = typename Op::Value;
+  using LValueRef = typename Op::LValueRef;
+  using RValueRef = typename Op::RValueRef;
+  using ConstLValueRef = typename Op::ConstLValueRef;
+  using ConstRValueRef = typename Op::ConstRValueRef;
+
+  STATIC_REQUIRE(or_else.invocable<Expected &, Value>);
+  STATIC_REQUIRE(or_else.invocable<Expected &, LValueRef>);
+  STATIC_REQUIRE(or_else.invocable<Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(or_else.invocable<Expected &, RValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<Expected &, ConstRValueRef> == false);
+
+  STATIC_REQUIRE(or_else.invocable<const Expected &, Value>);
+  STATIC_REQUIRE(or_else.invocable<const Expected &, LValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<const Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(or_else.invocable<const Expected &, RValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<const Expected &, ConstRValueRef> == false);
+
+  STATIC_REQUIRE(or_else.invocable<Expected &&, Value>);
+  STATIC_REQUIRE(or_else.invocable<Expected &&, LValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(or_else.invocable<Expected &&, RValueRef>);
+  STATIC_REQUIRE(or_else.invocable<Expected &&, ConstRValueRef>);
+
+  STATIC_REQUIRE(or_else.invocable<const Expected &&, Value>);
+  STATIC_REQUIRE(or_else.invocable<const Expected &&, LValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<const Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(or_else.invocable<const Expected &&, RValueRef> == false);
+  STATIC_REQUIRE(or_else.invocable<const Expected &&, ConstRValueRef>);
+
+  STATIC_REQUIRE(
+      or_else.invocable<Expected &, typename Op::ReturnLikeExpected> == false);
+
+  using F = decltype([]() -> Expected {
+    return unexpected{TestType{1}};
+  });
+  STATIC_REQUIRE(or_else.invocable<Expected &, F> == false);
+}
+
+TEST_CASE("or-else") {
+  auto getResults = [](auto init) {
+    using Expected = expected<std::string_view, int>;
+    Expected r1{std::move(init)};
+
+    auto r2 = r1 | or_else([](int &v) -> expected<std::string_view, Some> {
+                v = 5;
+                return unexpected{20};
+              });
+    auto r3 = std::as_const(r1) | or_else([](const auto &v) -> Expected {
+                return unexpected{v + 10};
+              })
+            | or_else([](auto &&v) -> Expected {
+                return unexpected{v + 1};
+              });
+
+    return std::tuple{std::move(r1), std::move(r2), std::move(r3)};
+  };
+
+  SECTION("with value") {
+    constexpr std::string_view msg{"foo"};
+    constexpr auto rs = getResults(msg);
+    STATIC_REQUIRE(std::get<0>(rs).value() == msg);
+    STATIC_REQUIRE(std::get<1>(rs).value() == msg);
+    STATIC_REQUIRE(std::same_as<
+                   std::remove_cvref_t<std::tuple_element_t<1, decltype(rs)>>,
+                   expected<std::string_view, Some>>);
+
+    STATIC_REQUIRE(std::get<2>(rs).value() == msg);
+  }
+
+  SECTION("with error") {
+    constexpr auto rs = getResults(unexpected{10});
+    STATIC_REQUIRE(std::get<0>(rs).error() == 5);
+    STATIC_REQUIRE(std::get<1>(rs).error() == 20);
+    STATIC_REQUIRE(std::same_as<
+                   std::remove_cvref_t<std::tuple_element_t<1, decltype(rs)>>,
+                   expected<std::string_view, Some>>);
+    STATIC_REQUIRE(std::get<2>(rs).error() == 16);
+  }
+}
+
 }  // namespace injectx::stdext::tests
