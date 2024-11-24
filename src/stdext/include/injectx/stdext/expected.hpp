@@ -299,4 +299,38 @@ constexpr auto and_then_as(T&& t, F&& f) noexcept
   }
 }
 
+namespace details::_expected {
+
+template<
+    typename T,
+    typename F,
+    typename R = invoke_result_t<F, decltype(std::declval<T>().value())>>
+  requires(!is_expected<R>)
+using transform_return = typename std::remove_cvref_t<T>::template rebind<R>;
+
+}  // namespace details::_expected
+
+template<is_expected T, typename F>
+constexpr auto transform_as(T&& t, F&& f) noexcept
+    -> details::_expected::transform_return<decltype(t), decltype(f)> {
+  if (!t.has_value()) {
+    return unexpected{std::forward<T>(t).error()};
+  }
+
+  auto invoke = [&] {
+    if constexpr (details::_expected::is_void<T>) {
+      return std::invoke(std::forward<F>(f));
+    } else {
+      return std::invoke(std::forward<F>(f), std::forward<T>(t).value());
+    }
+  };
+
+  if constexpr (std::is_void_v<std::invoke_result_t<decltype(invoke)>>) {
+    invoke();
+    return {};
+  } else {
+    return invoke();
+  }
+}
+
 }  // namespace injectx::stdext

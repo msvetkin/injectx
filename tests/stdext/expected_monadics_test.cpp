@@ -211,4 +211,103 @@ TEST_CASE("and-then") {
   }
 }
 
+TEMPLATE_TEST_CASE("transform-concept", "", void, int, Some) {
+  using Expected = expected<TestType, std::string_view>;
+  using Return = std::conditional_t<std::is_void_v<TestType>, int, TestType>;
+  using Op = Operations<TestType, Return>;
+  using Value = typename Op::Value;
+  using LValueRef = typename Op::LValueRef;
+  using RValueRef = typename Op::RValueRef;
+  using ConstLValueRef = typename Op::ConstLValueRef;
+  using ConstRValueRef = typename Op::ConstRValueRef;
+
+  constexpr auto result = std::is_void_v<typename Expected::value_type>;
+
+  STATIC_REQUIRE(transform.invocable<Expected &, Value>);
+  STATIC_REQUIRE(transform.invocable<Expected &, LValueRef>);
+  STATIC_REQUIRE(transform.invocable<Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(transform.invocable<Expected &, RValueRef> == result);
+  STATIC_REQUIRE(transform.invocable<Expected &, ConstRValueRef> == result);
+
+  STATIC_REQUIRE(transform.invocable<const Expected &, Value>);
+  STATIC_REQUIRE(transform.invocable<const Expected &, LValueRef> == result);
+  STATIC_REQUIRE(transform.invocable<const Expected &, ConstLValueRef>);
+  STATIC_REQUIRE(transform.invocable<const Expected &, RValueRef> == result);
+  STATIC_REQUIRE(
+      transform.invocable<const Expected &, ConstRValueRef> == result);
+
+  STATIC_REQUIRE(transform.invocable<Expected &&, Value>);
+  STATIC_REQUIRE(transform.invocable<Expected &&, LValueRef> == result);
+  STATIC_REQUIRE(transform.invocable<Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(transform.invocable<Expected &&, RValueRef>);
+  STATIC_REQUIRE(transform.invocable<Expected &&, ConstRValueRef>);
+
+  STATIC_REQUIRE(transform.invocable<const Expected &&, Value>);
+  STATIC_REQUIRE(transform.invocable<const Expected &&, LValueRef> == result);
+  STATIC_REQUIRE(transform.invocable<const Expected &&, ConstLValueRef>);
+  STATIC_REQUIRE(transform.invocable<const Expected &&, RValueRef> == result);
+  STATIC_REQUIRE(transform.invocable<const Expected &&, ConstRValueRef>);
+
+  if constexpr (std::is_void_v<typename Expected::value_type>) {
+    using F = decltype([](auto) -> typename Op::Return {
+      return 1;
+    });
+    STATIC_REQUIRE(transform.invocable<Expected &, F> == false);
+  } else {
+    using F = decltype([]() -> typename Op::Return {
+      return 1;
+    });
+    STATIC_REQUIRE(transform.invocable<Expected &, F> == false);
+  }
+}
+
+constexpr auto to_void(int) {
+  return;
+}
+
+TEST_CASE("transform") {
+  auto getResults = [](auto init) {
+    expected<int, std::string_view> r0{std::move(init)};
+
+    auto r1 = r0 | transform([](int &v) {
+                v = 5;
+                return 20;
+              });
+    auto r2 = std::as_const(r0) | transform([](const auto &v) {
+                return v + 10;
+              })
+            | transform([](auto &&v) {
+                return v + 1;
+              });
+    auto r3 = r2 | transform(to_void) | transform([]() {
+                return 1;
+              })
+            | transform(to_void);
+
+    return std::tuple{
+        std::move(r0), std::move(r1), std::move(r2), std::move(r3)};
+  };
+
+  SECTION("with value") {
+    constexpr auto rs = getResults(10);
+    STATIC_REQUIRE(std::get<0>(rs).value() == 5);
+    STATIC_REQUIRE(std::get<1>(rs).value() == 20);
+    STATIC_REQUIRE(std::get<2>(rs).value() == 16);
+    STATIC_REQUIRE(std::get<3>(rs).has_value());
+    STATIC_REQUIRE(std::is_void_v<
+                   typename std::tuple_element_t<3, decltype(rs)>::value_type>);
+  }
+
+  SECTION("with error") {
+    constexpr std::string_view msg{"foo"};
+    constexpr auto rs = getResults(unexpected{msg});
+    STATIC_REQUIRE(std::get<0>(rs).error() == msg);
+    STATIC_REQUIRE(std::get<1>(rs).error() == msg);
+    STATIC_REQUIRE(std::get<2>(rs).error() == msg);
+    STATIC_REQUIRE(std::get<3>(rs).error() == msg);
+    STATIC_REQUIRE(std::is_void_v<
+                   typename std::tuple_element_t<3, decltype(rs)>::value_type>);
+  }
+}
+
 }  // namespace injectx::stdext::tests
