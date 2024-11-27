@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright 2024 Mikhail Svetkin
 # SPDX-License-Identifier: MIT
 
+add_injectx_test(bundle)
 add_injectx_test(dependency_container)
 add_injectx_test(manifest)
 add_injectx_test(module)
