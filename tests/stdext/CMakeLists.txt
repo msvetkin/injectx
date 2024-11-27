@@ -6,6 +6,7 @@ add_subdirectory(coro)
 add_subdirectory(details)
 add_subdirectory(expects)
 add_subdirectory(monadics)
+add_subdirectory(ranges/views)
 
 add_injectx_test(coroutine)
 add_injectx_test(expected)
