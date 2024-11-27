@@ -17,6 +17,7 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/monadics/pipe.hpp
     include/injectx/stdext/monadics/transform.hpp
     include/injectx/stdext/monadics/transform_error.hpp
+    include/injectx/stdext/ranges/views/enumerate.hpp
     include/injectx/stdext/coroutine.hpp
     include/injectx/stdext/expected.hpp
     include/injectx/stdext/expects.hpp
