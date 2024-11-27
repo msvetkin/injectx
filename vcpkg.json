@@ -5,6 +5,7 @@
   "dependencies": [
     "fmt",
     "catch2",
-    "boost-pfr"
+    "boost-pfr",
+    "ms-gsl"
   ]
 }
