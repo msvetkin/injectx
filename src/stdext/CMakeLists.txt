@@ -27,6 +27,7 @@ target_sources(${injectx_module_target}
     include/injectx/stdext/source_location.hpp
     include/injectx/stdext/static_format.hpp
     include/injectx/stdext/static_map.hpp
+    include/injectx/stdext/static_queue.hpp
     include/injectx/stdext/static_string.hpp
     include/injectx/stdext/type_name.hpp
 
