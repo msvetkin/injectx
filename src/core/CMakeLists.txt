@@ -7,6 +7,7 @@ target_sources(${injectx_module_target}
   PRIVATE
     include/injectx/core/setup_concepts.hpp
     include/injectx/core/setup_task.hpp
+    include/injectx/core/setup_traits.hpp
 )
 
 target_link_libraries(${injectx_module_target}
