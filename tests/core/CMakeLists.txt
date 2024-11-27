@@ -3,3 +3,4 @@
 
 add_injectx_test(setup_concepts)
 add_injectx_test(setup_task)
+add_injectx_test(setup_traits)
