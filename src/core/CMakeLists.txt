@@ -5,6 +5,7 @@ add_injectx_module(core INTERFACE)
 
 target_sources(${injectx_module_target}
   PRIVATE
+    include/injectx/core/bundle.hpp
     include/injectx/core/dependency_container.hpp
     include/injectx/core/dependency_info.hpp
     include/injectx/core/manifest.hpp
