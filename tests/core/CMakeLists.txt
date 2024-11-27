@@ -3,6 +3,7 @@
 
 add_injectx_test(bundle)
 add_injectx_test(dependency_container)
+add_injectx_test(launch)
 add_injectx_test(manifest)
 add_injectx_test(module)
 add_injectx_test(setup_concepts)
