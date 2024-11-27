@@ -8,6 +8,7 @@ target_sources(${injectx_module_target}
     include/injectx/core/dependency_container.hpp
     include/injectx/core/dependency_info.hpp
     include/injectx/core/manifest.hpp
+    include/injectx/core/module.hpp
     include/injectx/core/setup_concepts.hpp
     include/injectx/core/setup_task.hpp
     include/injectx/core/setup_traits.hpp
