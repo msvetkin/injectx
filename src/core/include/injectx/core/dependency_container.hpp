@@ -54,7 +54,7 @@ GetExpected<T> get(
     const Storage &storage, std::index_sequence<Idx...>) noexcept {
   std::vector<std::string> errors;
 
-  [[maybe_unused]] auto fields = std::make_tuple(std::invoke([&] {
+  [[maybe_unused]] std::tuple fields = {std::invoke([&] {
     constexpr auto name = boost::pfr::get_name<Idx, T>();
     auto field = get<Field<Idx, T>>(storage, name);
 
@@ -63,7 +63,7 @@ GetExpected<T> get(
     }
 
     return field;
-  })...);
+  })...};
 
   if (!errors.empty()) {
     return stdext::unexpected{fmt::format(
