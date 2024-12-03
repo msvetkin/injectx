@@ -19,6 +19,6 @@ target_sources(${injectx_module_target}
 )
 
 target_link_libraries(${injectx_module_target}
-  INTERFACE
+  PUBLIC
     injectx::stdext
 )
