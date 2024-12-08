@@ -18,14 +18,17 @@ struct fn {
   struct action : Action {
     using tag_type = tag;
 
-    constexpr action(Callback cb) : cb_(std::forward<Callback>(cb)) {
+    template<typename C>
+      requires std::constructible_from<Callback, C>
+    constexpr action(C &&cb)
+        : cb_(std::forward<C>(cb)) {
     }
 
     template<typename T>
-    [[nodiscard]] constexpr decltype(auto) operator()(T &&t) const noexcept
       requires requires {
-        Action::invoke(std::forward<T>(t), std::forward<Callback>(this->cb_));
+        Action::invoke(std::declval<T>(), std::declval<Callback>());
       }
+    [[nodiscard]] constexpr decltype(auto) operator()(T &&t) const noexcept
     {
       return Action::invoke(std::forward<T>(t), std::forward<Callback>(cb_));
     }
