@@ -18,7 +18,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/bootstrap/vcpkg-config.cmake)
 vcpkg_configure(
   CACHE_DIR_NAME injectx
   REPO https://github.com/microsoft/vcpkg.git
-  REF 3508985146f1b1d248c67ead13f8f54be5b4f5da # release 2024.08.23
+  REF b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c # release 2024.11.16
 )
 
 include($CACHE{_VCPKG_TOOLCHAIN_FILE})
