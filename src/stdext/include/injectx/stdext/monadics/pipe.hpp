@@ -14,20 +14,24 @@ struct tag {};
 
 template<typename Action>
 struct fn {
-  template<typename F>
+  template<typename Callback>
   struct action : Action {
     using tag_type = tag;
 
-    F f;
+    constexpr action(Callback cb) : cb_(std::forward<Callback>(cb)) {
+    }
 
     template<typename T>
     [[nodiscard]] constexpr decltype(auto) operator()(T &&t) const noexcept
       requires requires {
-        Action::invoke(std::forward<T>(t), std::forward<F>(f));
+        Action::invoke(std::forward<T>(t), std::forward<Callback>(this->cb_));
       }
     {
-      return Action::invoke(std::forward<T>(t), std::forward<F>(f));
+      return Action::invoke(std::forward<T>(t), std::forward<Callback>(cb_));
     }
+
+  private:
+    Callback cb_;
   };
 
   template<typename T, typename F>
@@ -35,9 +39,9 @@ struct fn {
     action<F>::template invoke(std::declval<T>(), std::declval<F>());
   };
 
-  template<typename F>
-  [[nodiscard]] constexpr decltype(auto) operator()(F &&f) const noexcept {
-    return action<decltype(std::forward<F>(f))>{.f = std::forward<F>(f)};
+  template<typename Callback>
+  [[nodiscard]] constexpr decltype(auto) operator()(Callback &&cb) const noexcept {
+    return action<decltype(cb)>{std::forward<Callback>(cb)};
   }
 };
 
