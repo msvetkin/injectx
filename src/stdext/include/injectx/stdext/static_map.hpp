@@ -6,51 +6,48 @@
 #include "injectx/stdext/expected.hpp"
 
 #include <array>
+#include <iterator>
 #include <optional>
-#include <string_view>
 #include <utility>
 
 namespace injectx::stdext {
 
 namespace details::_static_map {
 
-template<typename Optional>
-class [[nodiscard]] iterator {
-  using Value = typename Optional::value_type;
+template<typename Iterator>
+class [[nodiscard]] iterator_wrapper {
+  using CountedIt = std::counted_iterator<Iterator>;
 
  public:
-  using iterator_category = std::forward_iterator_tag;
-  using difference_type = std::ptrdiff_t;
-  using value_type = std::conditional_t<
-      std::is_const_v<Optional>,
-      std::add_const_t<typename Optional::value_type>,
-      typename Optional::value_type>;
-  using pointer = value_type*;
-  using reference = value_type&;
-  using optional_ptr = Optional*;
+  constexpr iterator_wrapper() = default;
 
-  constexpr explicit iterator(optional_ptr ptr = nullptr) noexcept
-      : ptr_(ptr) {
+  constexpr iterator_wrapper(Iterator it, std::iter_difference_t<Iterator> count) noexcept
+    : countedIt_{it, count} {
   }
 
-  constexpr reference operator*() const noexcept {
-    return ptr_->value();
+  constexpr decltype(auto) operator*() const noexcept {
+    return countedIt_->value();
   }
 
-  constexpr pointer operator->() const noexcept {
-    return &ptr_->value();
+  constexpr decltype(auto) operator->() const noexcept {
+    return &countedIt_->value();
   }
 
-  constexpr iterator& operator++() noexcept {
-    ++ptr_;
+  constexpr iterator_wrapper& operator++() noexcept {
+    ++countedIt_;
     return *this;
   }
 
   friend constexpr std::strong_ordering operator<=>(
-      const iterator&, const iterator&) = default;
+      const iterator_wrapper&, const iterator_wrapper&) = default;
+
+  friend constexpr bool operator==(
+      const iterator_wrapper& it, std::default_sentinel_t) {
+    return it.countedIt_ == std::default_sentinel;
+  }
 
  private:
-  optional_ptr ptr_;
+  CountedIt countedIt_;
 };
 
 }  // namespace details::_static_map
@@ -64,8 +61,8 @@ class static_map {
   using key_type = typename value_type::first_type;
   using mapped_type = typename value_type::second_type;
   using container_type = std::array<Optional, MaxSize>;
-  using iterator = details::_static_map::iterator<Optional>;
-  using const_iterator = details::_static_map::iterator<const Optional>;
+  using iterator = details::_static_map::iterator_wrapper<typename container_type::iterator>;
+  using const_iterator = details::_static_map::iterator_wrapper<typename container_type::const_iterator>;
 
   constexpr static_map() = default;
 
@@ -81,10 +78,6 @@ class static_map {
     return MaxSize;
   }
 
-  [[nodiscard]] constexpr std::size_t index() const noexcept {
-    return const_iterator(&data_[size_]);
-  }
-
   template<typename... Args>
   constexpr expected<iterator, std::optional<iterator>> try_emplace(
       const Key& key, Args&&... args) noexcept {
@@ -97,41 +90,41 @@ class static_map {
     }
 
     data_[size_++].emplace(key, Value{std::forward<Args>(args)...});
-    return iterator(&data_[size_ - 1]);
+    return iterator{data_.begin() + (size_ - 1), std::ssize(*this)};
+  }
+
+  [[nodiscard]] constexpr const_iterator find(const Key& key) const noexcept {
+    const auto index = find_index(key);
+    if (index.has_value() == false) {
+      return {};
+    }
+
+    return {data_.begin() + *index, std::ssize(*this)};
   }
 
   [[nodiscard]] constexpr iterator find(const Key& key) noexcept {
     const auto index = find_index(key);
     if (index.has_value() == false) {
-      return end();
+      return {};
     }
 
-    return iterator(&data_[*index]);
-  }
-
-  constexpr const_iterator find(const Key& key) const noexcept {
-    const auto index = find_index(key);
-    if (index.has_value() == false) {
-      return end();
-    }
-
-    return const_iterator(&data_[*index]);
+    return {data_.begin() + *index, std::ssize(*this)};
   }
 
   constexpr iterator begin() noexcept {
-    return iterator(&data_[0]);
+    return {data_.begin(), std::ssize(*this)};
   }
 
   constexpr const_iterator begin() const noexcept {
-    return const_iterator(&data_[0]);
+    return {data_.begin(), std::ssize(*this)};
   }
 
-  constexpr iterator end() noexcept {
-    return iterator(&data_[size_]);
+  constexpr auto end() noexcept {
+    return std::default_sentinel;
   }
 
-  constexpr const_iterator end() const noexcept {
-    return const_iterator(&data_[size_]);
+  constexpr auto end() const noexcept {
+    return std::default_sentinel;
   }
 
  private:
