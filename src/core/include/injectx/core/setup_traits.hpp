@@ -8,9 +8,9 @@
 
 namespace injectx::core {
 
-template<IsSetupFunction T>
+template<auto setup>
 class SetupTraits {
-  using Signature = std::add_pointer_t<T>;
+  using Signature = decltype(setup);
   using Traits = stdext::function_traits<Signature>;
 
  public:

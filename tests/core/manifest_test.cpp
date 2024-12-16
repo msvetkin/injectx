@@ -20,7 +20,7 @@ SetupTask<Provides> setup(Requires) {
 }  // namespace modules::first
 
 TEST_CASE("provides-and-requires-empty") {
-  constexpr auto manifest = makeManifest(modules::first::setup);
+  constexpr auto manifest = makeManifest<modules::first::setup>();
   STATIC_REQUIRE(manifest.has_value());
   STATIC_REQUIRE(manifest->name() == "first");
   STATIC_REQUIRE(manifest->dependencies().size() == 0);
@@ -48,7 +48,7 @@ SetupTask<Provides> setup(Requires) {
 }  // namespace modules::second
 
 TEST_CASE("provides-and-requires") {
-  constexpr auto manifest = makeManifest(modules::second::setup);
+  constexpr auto manifest = makeManifest<modules::second::setup>();
   STATIC_REQUIRE(manifest.has_value() == true);
   STATIC_REQUIRE(manifest->name() == "second");
 
@@ -79,7 +79,7 @@ SetupTask<Provides> setup() {
 }  // namespace modules::third
 
 TEST_CASE("only-provides") {
-  constexpr auto manifest = makeManifest(modules::third::setup);
+  constexpr auto manifest = makeManifest<modules::third::setup>();
   STATIC_REQUIRE(manifest.has_value());
   STATIC_REQUIRE(manifest->name() == "third");
   STATIC_REQUIRE(manifest->dependencies().size() == 0);
@@ -97,7 +97,7 @@ SetupTask<void> setup(Requires) {
 }  // namespace modules::forth
 
 TEST_CASE("only-requires") {
-  constexpr auto manifest = makeManifest(modules::forth::setup);
+  constexpr auto manifest = makeManifest<modules::forth::setup>();
   STATIC_REQUIRE(manifest.has_value());
   REQUIRE(manifest->name() == "forth");
   STATIC_REQUIRE(manifest->dependencies().size() == 0);
@@ -121,7 +121,7 @@ SetupTask<Provides> setup(Requires) {
 }  // namespace boo
 
 TEST_CASE("invalid-namespace") {
-  constexpr auto manifest = makeManifest(boo::setup);
+  constexpr auto manifest = makeManifest<boo::setup>();
   STATIC_REQUIRE(manifest.has_value() == false);
   STATIC_REQUIRE(manifest.error() == std::string_view{"invalid namespace"});
 }
@@ -143,7 +143,7 @@ SetupTask<Provides> setup(Requires) {
 }  // namespace modules::boo
 
 TEST_CASE("error-depends-on-itself") {
-  constexpr auto manifest = makeManifest(modules::boo::setup);
+  constexpr auto manifest = makeManifest<modules::boo::setup>();
   STATIC_REQUIRE(manifest.has_value() == false);
   STATIC_REQUIRE(
       manifest.error()

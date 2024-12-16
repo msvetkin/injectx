@@ -232,14 +232,14 @@ struct TopologicalSortFn {
   }
 };
 
-template<typename... Setups>
+template<auto... setups>
 [[nodiscard]] constexpr auto topologicalSort() noexcept {
   auto getManifests = []() constexpr {
     return std::array{
-        makeManifest<SetupTraits<std::remove_pointer_t<Setups>>>()...};
+        makeManifest<setups>()...};
   };
 
-  return TopologicalSortFn<sizeof...(Setups)>{}(getManifests);
+  return TopologicalSortFn<sizeof...(setups)>{}(getManifests);
 }
 
 struct Bundle {
@@ -258,7 +258,7 @@ template<auto... setups>
 [[nodiscard]] consteval auto make() noexcept {
   using Expected = stdext::expected<const Bundle *, std::string_view>;
 
-  constexpr auto sorted = topologicalSort<decltype(setups)...>();
+  constexpr auto sorted = topologicalSort<setups...>();
   if constexpr (!sorted.has_value()) {
     return Expected{stdext::unexpected{sorted.error()}};
   } else {

@@ -174,16 +174,16 @@ class Manifest {
   const details::_manifest::Manifest *m_{nullptr};
 };
 
-template<typename STraits>
+template<auto setup>
 [[nodiscard]] consteval auto makeManifest() noexcept {
-  return details::_manifest::make<STraits>() | stdext::transform([](auto m) {
+  return details::_manifest::make<SetupTraits<setup>>() | stdext::transform([](auto m) {
            return Manifest{m};
          });
 }
 
-template<typename Setup>
-[[nodiscard]] consteval auto makeManifest(Setup) noexcept {
-  return makeManifest<SetupTraits<std::remove_pointer_t<Setup>>>();
-}
+// template<auto setup>
+// [[nodiscard]] consteval auto makeManifest() noexcept {
+  // return makeManifest<SetupTraits<Setup>>>();
+// }
 
 }  // namespace injectx::core

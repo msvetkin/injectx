@@ -12,26 +12,26 @@ namespace injectx::core {
 
 namespace details::_module {
 
-template<typename Setup>
+template<auto setup>
 [[nodiscard]] auto invoke(
-    Setup setup, DependencyContainer *dependencyContainer) noexcept {
-  using STraits = SetupTraits<std::remove_pointer_t<Setup>>;
+    DependencyContainer *dependencyContainer) noexcept {
+  using STraits = SetupTraits<setup>;
 
   if constexpr (std::same_as<typename STraits::Requires, std::monostate>) {
     using Expected = stdext::expected<typename STraits::Result, std::string>;
     return Expected{setup()};
   } else {
     auto result = dependencyContainer->resolve<typename STraits::Requires>();
-    return std::move(result) | stdext::transform([&setup](auto &&deps) {
+    return std::move(result) | stdext::transform([](auto &&deps) {
              return setup(std::forward<decltype(deps)>(deps));
            });
   }
 }
 
-template<typename Setup>
+template<auto setup>
 [[nodiscard]] SetupTask<void> makeSetupTask(
-    Setup setup, DependencyContainer *dependencyContainer) noexcept {
-  auto setupTask = invoke(setup, dependencyContainer);
+    DependencyContainer *dependencyContainer) noexcept {
+  auto setupTask = invoke<setup>(dependencyContainer);
 
   co_yield setupTask | stdext::and_then([](auto &task) {
     return task.init();
@@ -58,7 +58,7 @@ struct vtable {
 template<auto setup>
 inline constexpr vtable vtableFor = {
     .setup = [](DependencyContainer &dependencyContainer) {
-      return makeSetupTask(setup, &dependencyContainer);
+      return makeSetupTask<setup>(&dependencyContainer);
     }};
 
 }  // namespace details::_module
@@ -89,7 +89,7 @@ class Module {
 
 template<auto setup>
 [[nodiscard]] constexpr auto makeModule() noexcept {
-  return makeManifest(setup) | stdext::transform([](auto manifest) {
+  return makeManifest<setup>() | stdext::transform([](auto manifest) {
            return Module{&details::_module::vtableFor<setup>, manifest};
          });
 }
