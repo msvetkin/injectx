@@ -18,7 +18,7 @@ SetupTask<Provides> onlyProvides() {
 }
 
 TEST_CASE("only-provides") {
-  using Traits = SetupTraits<decltype(onlyProvides)>;
+  using Traits = SetupTraits<onlyProvides>;
 
   STATIC_REQUIRE(std::same_as<typename Traits::Provides, Provides>);
   STATIC_REQUIRE(std::same_as<typename Traits::Requires, std::monostate>);
@@ -31,7 +31,7 @@ SetupTask<Provides> providesAndRequires(Requires) {
 }
 
 TEST_CASE("provides-and-requires") {
-  using Traits = SetupTraits<decltype(providesAndRequires)>;
+  using Traits = SetupTraits<providesAndRequires>;
 
   STATIC_REQUIRE(std::same_as<typename Traits::Provides, Provides>);
   STATIC_REQUIRE(std::same_as<typename Traits::Requires, Requires>);
@@ -42,7 +42,7 @@ SetupTask<void> onlyRequires(Requires) {
 }
 
 TEST_CASE("only-requires") {
-  using Traits = SetupTraits<decltype(onlyRequires)>;
+  using Traits = SetupTraits<onlyRequires>;
 
   STATIC_REQUIRE(std::same_as<typename Traits::Provides, std::monostate>);
   STATIC_REQUIRE(std::same_as<typename Traits::Requires, Requires>);
