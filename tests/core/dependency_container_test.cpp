@@ -9,18 +9,24 @@
 
 namespace injectx::core::tests {
 
-TEST_CASE("provide-pod-types") {
-  struct Provides {
-    int i;
-    bool b;
-    float f;
-  };
+namespace first {
 
-  struct Requires {
-    int i{};
-    bool b{};
-    float f{};
-  };
+struct Provides {
+  int i;
+  bool b;
+  float f;
+};
+
+struct Requires {
+  int i{};
+  bool b{};
+  float f{};
+};
+
+}  // namespace first
+
+TEST_CASE("provide-pod-types") {
+  using namespace first;
 
   DependencyContainer dependencies;
 
@@ -40,14 +46,20 @@ TEST_CASE("provide-pod-types") {
   REQUIRE(std::addressof(resolved->f) != std::addressof(provides.f));
 }
 
-TEST_CASE("provide-callable") {
-  struct Provides {
-    std::function<int()> value;
-  };
+namespace second {
 
-  struct Requires {
-    int value{555};
-  };
+struct Provides {
+  std::function<int()> value;
+};
+
+struct Requires {
+  int value{555};
+};
+
+}  // namespace second
+
+TEST_CASE("provide-callable") {
+  using namespace second;
 
   DependencyContainer dependencies;
 
@@ -66,15 +78,19 @@ TEST_CASE("provide-callable") {
   REQUIRE(resolved->value == 1);
 }
 
+namespace third {
+
+struct Provides {
+  std::shared_ptr<int> value;
+};
+
+struct Requires {
+  std::shared_ptr<int> value;
+};
+
+}  // namespace third
+
 TEST_CASE("provide-shared-pointer") {
-  struct Provides {
-    std::shared_ptr<int> value;
-  };
-
-  struct Requires {
-    std::shared_ptr<int> value;
-  };
-
   DependencyContainer dependencies;
 
   Provides provides{.value = std::make_shared<int>(100)};
@@ -87,11 +103,17 @@ TEST_CASE("provide-shared-pointer") {
   REQUIRE(provides.value.use_count() == 3);
 }
 
+namespace forth {
+
+struct Provides {
+  int value;
+  int boo;
+};
+
+}  // namespace forth
+
 TEST_CASE("provide-same-type-twice") {
-  struct Provides {
-    int value;
-    int boo;
-  };
+  using namespace forth;
 
   DependencyContainer dependencies;
 
@@ -113,16 +135,22 @@ TEST_CASE("provide-same-type-twice") {
   REQUIRE(resolved->boo == provides1.boo);
 }
 
-TEST_CASE("provide-half-of-requires") {
-  struct Provides {
-    int i;
-  };
+namespace fifth {
 
-  struct Requires {
-    int i;
-    bool b;
-    float f;
-  };
+struct Provides {
+  int i;
+};
+
+struct Requires {
+  int i;
+  bool b;
+  float f;
+};
+
+}  // namespace fifth
+
+TEST_CASE("provide-half-of-requires") {
+  using namespace fifth;
 
   DependencyContainer dependencies;
 
@@ -137,16 +165,22 @@ TEST_CASE("provide-half-of-requires") {
                           "'float f' has not been provided"});
 }
 
-TEST_CASE("provide-same-names-different-types-then-requires") {
-  struct Provides {
-    float foo;
-    int boo;
-  };
+namespace six {
 
-  struct Requires {
-    int foo;
-    float boo;
-  };
+struct Provides {
+  float foo;
+  int boo;
+};
+
+struct Requires {
+  int foo;
+  float boo;
+};
+
+}  // namespace six
+
+TEST_CASE("provide-same-names-different-types-then-requires") {
+  using namespace six;
 
   DependencyContainer dependencies;
 
@@ -161,20 +195,26 @@ TEST_CASE("provide-same-names-different-types-then-requires") {
                           "boo' has different type"});
 }
 
+namespace seven {
+
+struct Provides1 {
+  int i;
+  bool b;
+};
+
+struct Provides2 {
+  float f;
+  int i;
+};
+
+struct Requires {
+  float f;
+};
+
+}  // namespace seven
+
 TEST_CASE("provide-conflictig-types") {
-  struct Provides1 {
-    int i;
-    bool b;
-  };
-
-  struct Provides2 {
-    float f;
-    int i;
-  };
-
-  struct Requires {
-    float f;
-  };
+  using namespace seven;
 
   DependencyContainer dependencies;
 
