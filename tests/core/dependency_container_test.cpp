@@ -91,6 +91,8 @@ struct Requires {
 }  // namespace third
 
 TEST_CASE("provide-shared-pointer") {
+  using namespace third;
+
   DependencyContainer dependencies;
 
   Provides provides{.value = std::make_shared<int>(100)};
