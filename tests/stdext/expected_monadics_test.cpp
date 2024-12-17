@@ -148,12 +148,15 @@ TEMPLATE_TEST_CASE("and-then-concept", "", void, int, Some) {
       == false);
 
   if constexpr (std::is_void_v<typename Expected::value_type>) {
-    using F = decltype([](auto) -> typename Ops::Return {
-      return 1;
-    });
+    // msvc does not like '-> typename Ops::Return'
+    using F =
+        decltype([](auto) -> typename Expected::template rebind<std::any> {
+          return 1;
+        });
     STATIC_REQUIRE(and_then.invocable<Expected &, F> == false);
   } else {
-    using F = decltype([]() -> typename Ops::Return {
+    // msvc does not like '-> typename Ops::Return'
+    using F = decltype([]() -> typename Expected::template rebind<std::any> {
       return 1;
     });
     STATIC_REQUIRE(and_then.invocable<Expected &, F> == false);
