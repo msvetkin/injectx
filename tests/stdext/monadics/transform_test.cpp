@@ -5,9 +5,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <functional>
-#include <tuple>
-
 namespace injectx::stdext::monadics::tests {
 
 struct Some {
