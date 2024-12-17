@@ -9,16 +9,21 @@ namespace injectx::stdext {
 
 namespace monadics::details::_or_else {
 
+template<typename Callback>
 struct action {
-  template<typename T, typename F>
-  [[nodiscard]] static constexpr decltype(auto) invoke(T &&t, F &&f) noexcept
-    requires requires { or_else_as(std::forward<T>(t), std::forward<F>(f)); }
+  Callback callback;
+
+  template<typename T>
+  [[nodiscard]] friend constexpr auto operator|(T &&t, action &&a) noexcept
+    requires requires {
+      or_else_as(std::forward<T>(t), std::forward<Callback>(a.callback));
+    }
   {
-    return or_else_as(std::forward<T>(t), std::forward<F>(f));
+    return or_else_as(std::forward<T>(t), std::forward<Callback>(a.callback));
   }
 };
 
-using fn = monadics::pipe<action>;
+using fn = monadics::pipe_fn<action>;
 
 }  // namespace monadics::details::_or_else
 
