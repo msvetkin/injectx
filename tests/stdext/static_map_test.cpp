@@ -61,12 +61,12 @@ TEST_CASE("try-emplace") {
 
 TEST_CASE("find") {
   static constexpr auto map = std::invoke([] {
-    static_map<std::string_view, int, 3> map;
-    (void)map.try_emplace("b", 3);
-    (void)map.try_emplace("a", 2);
-    (void)map.try_emplace("c", 4);
-    (void)map.try_emplace("a", 1);
-    return map;
+    static_map<std::string_view, int, 3> m;
+    (void)m.try_emplace("b", 3);
+    (void)m.try_emplace("a", 2);
+    (void)m.try_emplace("c", 4);
+    (void)m.try_emplace("a", 1);
+    return m;
   });
 
   STATIC_REQUIRE(map.size() == 3);
