@@ -9,18 +9,23 @@ namespace injectx::stdext {
 
 namespace monadics::details::_transform_error {
 
+template<typename Callback>
 struct action {
-  template<typename T, typename F>
-  [[nodiscard]] static constexpr decltype(auto) invoke(T &&t, F &&f) noexcept
+  Callback callback;
+
+  template<typename T>
+  [[nodiscard]] friend constexpr auto operator|(T &&t, action &&a) noexcept
     requires requires {
-      transform_error_as(std::forward<T>(t), std::forward<F>(f));
+      transform_error_as(
+          std::forward<T>(t), std::forward<Callback>(a.callback));
     }
   {
-    return transform_error_as(std::forward<T>(t), std::forward<F>(f));
+    return transform_error_as(
+        std::forward<T>(t), std::forward<Callback>(a.callback));
   }
 };
 
-using fn = monadics::pipe<action>;
+using fn = pipe_fn<action>;
 
 }  // namespace monadics::details::_transform_error
 
