@@ -24,12 +24,12 @@ struct fn {
       requires requires {
         Action::invoke(std::declval<T>(), std::declval<Callback>());
       }
-    [[nodiscard]] friend constexpr auto operator|(T &&t, const pipeable_action<Callback> &a) noexcept
-    {
+    [[nodiscard]] friend constexpr auto operator|(
+        T &&t, const pipeable_action<Callback> &a) noexcept {
       return Action::invoke(std::forward<T>(t), std::forward<Callback>(a.cb_));
     }
 
-  private:
+   private:
     Callback cb_;
   };
 
@@ -39,7 +39,8 @@ struct fn {
   };
 
   template<typename Callback>
-  [[nodiscard]] constexpr decltype(auto) operator()(Callback &&cb) const noexcept {
+  [[nodiscard]] constexpr decltype(auto) operator()(
+      Callback &&cb) const noexcept {
     return pipeable_action<decltype(cb)>{std::forward<Callback>(cb)};
   }
 };
@@ -48,5 +49,18 @@ struct fn {
 
 template<typename Action>
 using pipe = details::_pipe::fn<Action>;
+
+template<template<typename> typename Action>
+struct pipe_fn {
+  template<typename T, typename F>
+  inline static constexpr auto invocable =
+      requires { std::declval<T>() | std::declval<Action<F>>(); };
+
+  template<typename Callback>
+  [[nodiscard]] constexpr decltype(auto) operator()(
+      Callback &&cb) const noexcept {
+    return Action{std::forward<Callback>(cb)};
+  }
+};
 
 }  // namespace injectx::stdext::monadics

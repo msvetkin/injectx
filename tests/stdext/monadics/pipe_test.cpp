@@ -10,16 +10,19 @@
 
 namespace injectx::stdext::monadics::tests {
 
+template<typename Callback>
 struct some_action {
-  template<typename T, typename F>
-  [[nodiscard]] static constexpr decltype(auto) invoke(T &&t, F &&f) noexcept
-    requires requires { std::forward<F>(f)(std::forward<T>(t)); }
+  Callback callback;
+
+  template<typename T>
+  [[nodiscard]] friend constexpr auto operator|(T &&t, some_action &&s) noexcept
+    requires std::invocable<decltype(s.callback), decltype(t)>
   {
-    return std::forward<F>(f)(std::forward<T>(t));
+    return std::invoke(std::forward<Callback>(s.callback), std::forward<T>(t));
   }
 };
 
-inline constexpr pipe<some_action> some{};
+inline constexpr pipe_fn<some_action> some{};
 
 TEST_CASE("concept") {
   using F = decltype([](auto) {
@@ -31,7 +34,7 @@ TEST_CASE("concept") {
 TEST_CASE("operator") {
   constexpr auto r = std::invoke([] {
     int v0 = 10;
-    auto v1 = v0 | some([](auto &v) {
+    auto v1 = v0 | some([](int &v) {
                 auto s = v;
                 v = 15;
                 return s + 10;
