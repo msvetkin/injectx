@@ -16,7 +16,7 @@ struct pipe_fn {
   template<typename Callback>
   [[nodiscard]] constexpr decltype(auto) operator()(
       Callback &&cb) const noexcept {
-    return Action{std::forward<Callback>(cb)};
+    return Action<decltype(cb)>{std::forward<Callback>(cb)};
   }
 };
 

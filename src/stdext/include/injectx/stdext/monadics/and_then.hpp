@@ -16,7 +16,7 @@ struct action {
   template<typename T>
   [[nodiscard]] friend constexpr auto operator|(T &&t, action &&a) noexcept
     requires requires {
-      and_then_as(std::forward<T>(t), std::forward<Callback>(a.callback));
+      and_then_as(std::forward<T>(t), std::declval<Callback>());
     }
   {
     return and_then_as(std::forward<T>(t), std::forward<Callback>(a.callback));
