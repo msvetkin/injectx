@@ -41,6 +41,13 @@ else()
 endif()
 
 add_injectx_test_executable(fail_runtime)
+if (WIN32)
+  target_sources(${injectx_test_target}
+    PRIVATE
+      windows_supress_abort_dialog.cpp
+  )
+endif()
+
 add_test(
   NAME ${injectx_test_target}-exit-code
   COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:${injectx_test_target}>
