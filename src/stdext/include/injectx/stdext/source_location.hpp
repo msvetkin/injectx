@@ -3,7 +3,10 @@
 
 #pragma once
 
-#if __has_include(<source_location>)
+#include <version>
+
+#if defined(__cpp_lib_source_location) \
+    && !(defined(__clang__) && defined(__APPLE__) && __clang_major__ == 15)
 
 #  include <source_location>
 
