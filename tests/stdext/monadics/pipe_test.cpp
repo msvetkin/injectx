@@ -16,7 +16,7 @@ struct some_action {
 
   template<typename T>
   [[nodiscard]] friend constexpr auto operator|(T &&t, some_action &&s) noexcept
-    requires std::invocable<decltype(s.callback), decltype(t)>
+    requires std::invocable<Callback, decltype(t)>
   {
     return std::invoke(std::forward<Callback>(s.callback), std::forward<T>(t));
   }
