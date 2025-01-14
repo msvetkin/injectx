@@ -13,8 +13,7 @@ namespace injectx::core {
 namespace details::_module {
 
 template<auto setup>
-[[nodiscard]] auto invoke(
-    DependencyContainer *dependencyContainer) noexcept {
+[[nodiscard]] auto invoke(DependencyContainer *dependencyContainer) noexcept {
   using STraits = SetupTraits<setup>;
 
   if constexpr (std::same_as<typename STraits::Requires, std::monostate>) {
@@ -35,14 +34,16 @@ template<auto setup>
 
   co_yield setupTask | stdext::and_then([](auto &task) {
     return task.init();
-  })
-      | stdext::and_then([&dependencyContainer]<typename Provides>(
-                             Provides &&provides) {
-          return dependencyContainer->provide(std::forward<Provides>(provides));
-        })
-      | stdext::transform([] {
-          return std::monostate{};
-        });
+  }) | stdext::and_then([&dependencyContainer](auto &&...provides) {
+    if constexpr (sizeof...(provides) == 0) {
+      return stdext::expected<void, std::string>{};
+    } else {
+      return dependencyContainer->provide(
+          std::forward<decltype(provides)>(provides)...);
+    }
+  }) | stdext::transform([] {
+    return std::monostate{};
+  });
 
   if (const auto res = setupTask->teardown(); !res.has_value()) {
     co_yield stdext::unexpected{res.error()};
