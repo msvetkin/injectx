@@ -235,8 +235,7 @@ struct TopologicalSortFn {
 template<auto... setups>
 [[nodiscard]] constexpr auto topologicalSort() noexcept {
   auto getManifests = []() constexpr {
-    return std::array{
-        makeManifest<setups>()...};
+    return std::array{makeManifest<setups>()...};
   };
 
   return TopologicalSortFn<sizeof...(setups)>{}(getManifests);
@@ -305,7 +304,7 @@ class Bundle {
   const details::_bundle::Bundle *b_{nullptr};
 };
 
-template<auto... setups>
+template<IsSetupFunction auto... setups>
 [[nodiscard]] consteval auto makeBundle() noexcept {
   return details::_bundle::make<setups...>() | stdext::transform([](auto b) {
            return Bundle{b};

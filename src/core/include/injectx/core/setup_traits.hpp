@@ -4,11 +4,10 @@
 #include "injectx/stdext/function_traits.hpp"
 
 #include <type_traits>
-#include <utility>
 
 namespace injectx::core {
 
-template<auto setup>
+template<IsSetupFunction auto setup>
 class SetupTraits {
   using Signature = decltype(setup);
   using Traits = stdext::function_traits<Signature>;

@@ -86,7 +86,7 @@ class Module {
   Manifest manifest_{nullptr};
 };
 
-template<auto setup>
+template<IsSetupFunction auto setup>
 [[nodiscard]] constexpr auto makeModule() noexcept {
   return makeManifest<setup>() | stdext::transform([](auto manifest) {
            return Module{&details::_module::vtableFor<setup>, manifest};

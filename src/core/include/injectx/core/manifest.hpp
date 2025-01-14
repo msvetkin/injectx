@@ -171,7 +171,7 @@ class Manifest {
   const details::_manifest::Manifest *m_{nullptr};
 };
 
-template<auto setup>
+template<IsSetupFunction auto setup>
 [[nodiscard]] consteval auto makeManifest() noexcept {
   return details::_manifest::make<SetupTraits<setup>>()
        | stdext::transform([](auto m) {
