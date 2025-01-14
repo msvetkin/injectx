@@ -5,13 +5,11 @@
 
 #include "injectx/core/dependency_info.hpp"
 #include "injectx/core/setup_traits.hpp"
-// #include "injectx/stdext/empty.hpp"
 #include "injectx/stdext/expected.hpp"
 #include "injectx/stdext/ranges/aliases.hpp"
 #include "injectx/stdext/ranges/views/enumerate.hpp"
 #include "injectx/stdext/static_format.hpp"
 #include "injectx/stdext/type_name.hpp"
-// #include "injectx/stdext/ranges/algorithm/binary_find.hpp"
 
 #include <boost/pfr.hpp>
 #include <fmt/core.h>
@@ -180,10 +178,5 @@ template<auto setup>
            return Manifest{m};
          });
 }
-
-// template<auto setup>
-// [[nodiscard]] consteval auto makeManifest() noexcept {
-// return makeManifest<SetupTraits<Setup>>>();
-// }
 
 }  // namespace injectx::core
