@@ -5,6 +5,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <type_traits>
+
 namespace injectx::core::tests {
 
 TEST_CASE("lambda-is-not-allowed") {
@@ -72,6 +74,13 @@ SetupTask<void> noProvidesAndRequires() {
 
 TEST_CASE("no-provides-and-requires") {
   STATIC_REQUIRE_FALSE(IsSetupFunction<decltype(noProvidesAndRequires)>);
+}
+
+template<IsSetupFunction auto setup>
+inline constexpr auto IsSetupVariable = true;
+
+TEST_CASE("as-concept-with-auto-template-argument") {
+  STATIC_REQUIRE(IsSetupVariable<onlyRequires>);
 }
 
 }  // namespace injectx::core::tests
