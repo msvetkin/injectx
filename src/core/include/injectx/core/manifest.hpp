@@ -7,7 +7,6 @@
 #include "injectx/core/setup_traits.hpp"
 // #include "injectx/stdext/empty.hpp"
 #include "injectx/stdext/expected.hpp"
-#include "injectx/stdext/monadics.hpp"
 #include "injectx/stdext/ranges/aliases.hpp"
 #include "injectx/stdext/ranges/views/enumerate.hpp"
 #include "injectx/stdext/static_format.hpp"
@@ -176,14 +175,15 @@ class Manifest {
 
 template<auto setup>
 [[nodiscard]] consteval auto makeManifest() noexcept {
-  return details::_manifest::make<SetupTraits<setup>>() | stdext::transform([](auto m) {
+  return details::_manifest::make<SetupTraits<setup>>()
+       | stdext::transform([](auto m) {
            return Manifest{m};
          });
 }
 
 // template<auto setup>
 // [[nodiscard]] consteval auto makeManifest() noexcept {
-  // return makeManifest<SetupTraits<Setup>>>();
+// return makeManifest<SetupTraits<Setup>>>();
 // }
 
 }  // namespace injectx::core
