@@ -20,10 +20,8 @@ template<auto setup>
     using Expected = stdext::expected<typename STraits::Result, std::string>;
     return Expected{setup()};
   } else {
-    auto result = dependencyContainer->resolve<typename STraits::Requires>();
-    return std::move(result) | stdext::transform([](auto &&deps) {
-             return setup(std::forward<decltype(deps)>(deps));
-           });
+    return dependencyContainer->resolve<typename STraits::Requires>()
+         | stdext::transform(setup);
   }
 }
 
