@@ -207,4 +207,28 @@ TEST_CASE("error-during-teardown") {
   REQUIRE(modules::fifth::gSteps == std::vector{1, 2});
 }
 
+namespace modules::six {
+
+struct Requires {
+  int value;
+};
+
+SetupTask<void> setup(Requires) {
+  co_yield {};
+}
+
+}  // namespace modules::six
+
+TEST_CASE("only-requires") {
+  const modules::six::Requires deps{.value = 10};
+  DependencyContainer dependencyContainer;
+  REQUIRE(dependencyContainer.provide(deps).has_value());
+
+  constexpr auto module = makeModule<modules::six::setup>();
+  STATIC_REQUIRE(module.has_value());
+
+  auto t = module->setup(dependencyContainer);
+  REQUIRE(t.init().has_value());
+}
+
 }  // namespace injectx::core::tests
