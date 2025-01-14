@@ -41,13 +41,16 @@ concept ValidSignature = requires {
   requires ValidArguments<FTraits>;
 };
 
+template<typename T>
+concept IsSetup = requires {
+  requires std::is_function_v<T>;
+  requires ValidSignature<stdext::function_traits<std::add_pointer_t<T>>>;
+};
+
 }  // namespace details::_setup_concepts
 
 template<typename T>
-concept IsSetupFunction = requires {
-  requires std::is_function_v<T>;
-  requires details::_setup_concepts::ValidSignature<
-      stdext::function_traits<std::add_pointer_t<T>>>;
-};
+concept IsSetupFunction =
+    details::_setup_concepts::IsSetup<std::remove_pointer_t<T>>;
 
 }  // namespace injectx::core
