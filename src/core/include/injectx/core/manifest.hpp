@@ -135,10 +135,12 @@ make() noexcept {
     if constexpr (!circularDeps.has_value()) {
       constexpr auto dep =
           manifest->dependencies[circularDeps.error().dependency].name;
-      return stdext::unexpected{stdext::static_format<
+      constexpr auto formatted = stdext::static_format<
           "Component '{}' provides and depends on '{}'",
-          stdext::static_string<manifest->name.size()>{manifest->name},
-          stdext::static_string<dep.size()>{dep}>()};
+          stdext::static_string<manifest->name.size() + 1>{manifest->name},
+          stdext::static_string<dep.size() + 1>{dep}>();
+
+      return stdext::unexpected{std::string_view{formatted}};
     }
 
     return manifest;
