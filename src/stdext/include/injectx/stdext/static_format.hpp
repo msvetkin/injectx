@@ -7,6 +7,8 @@
 
 #include <fmt/compile.h>
 
+#include <utility>
+
 namespace injectx::stdext {
 
 namespace details::_static_format {
@@ -31,7 +33,7 @@ template<static_string fmt, auto... args>
 }
 
 template<static_string fmt, auto... args>
-[[nodiscard]] consteval auto static_format2() noexcept {
+[[nodiscard]] consteval auto static_format(std::in_place_t) noexcept {
   return details::_static_format::formatted<fmt, args...>;
 }
 

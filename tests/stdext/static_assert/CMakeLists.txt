@@ -31,12 +31,12 @@ add_test(
 if (MSVC)
   set_tests_properties(${injectx_test_target}-output
     PROPERTIES
-      PASS_REGULAR_EXPRESSION "failure was caused by evaluating a throw sub-expression"
+      PASS_REGULAR_EXPRESSION "char{118,97,108,117,101,32,61,32,57,44,32,109,117,115,116,32,98,101,32,49,48,0}"
   )
 else()
   set_tests_properties(${injectx_test_target}-output
     PROPERTIES
-      PASS_REGULAR_EXPRESSION "condition failted: 'expected to be true'"
+      PASS_REGULAR_EXPRESSION "value = 9, must be 10"
   )
 endif()
 
