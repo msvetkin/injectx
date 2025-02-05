@@ -14,35 +14,47 @@ namespace injectx::stdext {
 
 template<std::size_t N>
 struct static_string {
-  constexpr static_string(const char (&str)[N]) noexcept
-      : size_{N - 1} {
-    std::copy(std::begin(str), std::end(str), data_.begin());
+  static inline constexpr auto Capacity = N;
+  static inline constexpr auto Size = N - 1;
+  static inline constexpr bool Empty = N == 1;
+
+  consteval explicit(false) static_string(const char (&str)[N]) noexcept {
+    for (auto i = std::size_t{}; i < N; ++i) {
+      storage[i] = str[i];
+    }
+    // std::copy(std::begin(str), std::end(str), storage.begin());
   }
 
-  constexpr static_string(std::string_view str) noexcept {
-    for (std::size_t i = 0; i < str.size(); ++i) {
-      data_[i] = str[i];
+  consteval explicit(true) static_string(const char *str, std::size_t size) {
+    for (auto i = std::size_t{}; i < size; ++i) {
+      storage[i] = str[i];
     }
-    size_ = str.size();
+  }
+
+  consteval explicit(true) static_string(std::string_view str) noexcept
+      : static_string(str.data(), str.size()) {
   }
 
   friend constexpr std::strong_ordering operator<=>(
       const static_string &, const static_string &) = default;
 
   [[nodiscard]] constexpr const char *data() const noexcept {
-    return data_.data();
+    return storage.data();
   }
 
   [[nodiscard]] constexpr std::size_t size() const noexcept {
-    return size_;
+    return Size;
   }
 
   [[nodiscard]] constexpr char operator[](std::size_t idx) const noexcept {
-    return data_[idx];
+    return storage[idx];
   }
 
-  std::array<char, N + 1> data_{};
-  std::size_t size_{};
+  constexpr explicit(true) operator std::string_view() const {
+    return std::string_view{storage.data(), size()};
+  }
+
+  std::array<char, N> storage{};
 };
 
 template<std::size_t N>
@@ -63,7 +75,7 @@ struct fmt::formatter<injectx::stdext::static_string<N>> {
   }
 };
 
-#define STDEXT_AS_STATIC_STRING(s)  \
-  stdext::static_string<s.size()> { \
-    s                               \
+#define STDEXT_AS_STATIC_STRING(s)      \
+  stdext::static_string<s.size() + 1> { \
+    s                                   \
   }

@@ -7,6 +7,7 @@ add_subdirectory(details)
 add_subdirectory(expects)
 add_subdirectory(monadics)
 add_subdirectory(ranges/views)
+add_subdirectory(static_assert)
 
 add_injectx_test(coroutine)
 add_injectx_test(expected)
